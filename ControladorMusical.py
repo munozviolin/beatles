@@ -1,4 +1,5 @@
 from midiutil import MIDIFile
+import random
 
 degrees = [60, 62, 64, 65, 67, 69, 71, 72]  # MIDI note number
 track = 0
@@ -7,6 +8,7 @@ time = 0  # In beats
 duration = 1  # In beats
 tempo = 60  # In BPM
 volume = 100  # 0-127, as per the MIDI standard
+pos = 0
 
 # NOTAS
 aBem = 56  # Bem = bemol
@@ -31,15 +33,17 @@ gBem = 66
 g = 67
 gSus = 68
 
-arregloC = [c,d,e,f,g,a,b]
-arregloNotas = []
-arregloOctavas = []
-arregloRitmos = []
-arregloVelocidades = []
-arregloVolumenes = []
-arregloGrados = []
-arregloValores = []
-arregloDuraciones = []
+# GRADOS SIGUIENTES
+sig1 = ["2m", "3m", "4M", "5M", "6m", "7d"] #grados siguientes del 1er grado
+sig2 = ["1M", "5M", "6m"] #grados siguientes del 2do grado
+sig3 = ["6m", "4M", "7d"] #grados siguientes del 3er grado
+sig4 = ["1M", "5M", "7d", "6m", "2m"] #grados siguientes del 4to grado
+sig5 = ["1M", "6m", "2m", "4M"] #grados siguientes del 5to grado
+sig6 = ["2m", "5M", "4M", "7d"] #grados siguientes del 6to grado
+sig7 = ["1M", "2m", "4M", "5M", "6m"] #grados siguientes del 7mo grado
+
+arregloC = [c, d, e, f, g, a, b]
+progresion = []
 
 
 # método que construye un grado si es Mayor
@@ -95,8 +99,8 @@ def minor(note, where, midi):
     return
 
 #método que construye un grado si es aumentado
-def augmented(note, where, midi):
-    global count
+def Augmented(note, where, midi):
+    global time
     tonic = note
     mediant = note+4
     dominant = note+8
@@ -106,24 +110,24 @@ def augmented(note, where, midi):
     channel = 0
     volume = 100
     pitch = list[0]  # C4 (middle C)
-    count = where  # start on beat 4
+    time = where  # start on beat 4
     duration = 1  # 1 beat long
     midi.addNote(track, channel, pitch, time, duration, volume)
 
     pitch = list[1]  # E4
-    count = where  # start on beat 4
+    time = where  # start on beat 4
     duration = 1  # 1 beat long
     midi.addNote(track, channel, pitch, time, duration, volume)
 
     pitch = list[2]  # G4
-    count = where  # start on beat 4
+    time = where  # start on beat 4
     duration = 1  # 1 beat long
     midi.addNote(track, channel, pitch, time, duration, volume)
     return
 
 #método que construye un grado si es disminuido
 def diminished(note, where, midi):
-    global count
+    global time
     tonic = note
     mediant = note+3
     dominant = note+6
@@ -133,17 +137,17 @@ def diminished(note, where, midi):
     channel = 0
     volume = 100
     pitch = list[0]  # C4 (middle C)
-    count = where  # start on beat 4
+    time = where  # start on beat 4
     duration = 1  # 1 beat long
     midi.addNote(track, channel, pitch, time, duration, volume)
 
     pitch = list[1]  # E4
-    count = where  # start on beat 4
+    time = where  # start on beat 4
     duration = 1  # 1 beat long
     midi.addNote(track, channel, pitch, time, duration, volume)
 
     pitch = list[2]  # G4
-    count = where  # start on beat 4
+    time = where  # start on beat 4
     duration = 1  # 1 beat long
     midi.addNote(track, channel, pitch, time, duration, volume)
     return
@@ -340,48 +344,69 @@ def minor6(note, where, midi):
     midi.addNote(track, channel, pitch, time, duration, volume)
     return
 
-def construirProgresion():
-    global primerAcorde
+def tipoAcorde(chord, midi):
+    global pos
+    if (chord[1] == "M"):
+        numero = int(chord[0])-1
+        notaEncontrada = arregloC[numero]
+        Major(notaEncontrada, pos, midi)
+    elif (chord[1] == "m"):
+        numero = int(chord[0])-1
+        notaEncontrada = arregloC[numero]
+        minor(notaEncontrada, pos, midi)
+    elif (chord[1] == "A"):
+        numero = int(chord[0])-1
+        notaEncontrada = arregloC[numero]
+        Augmented(notaEncontrada, pos, midi)
+    elif (chord[1] == "d"):
+        numero = int(chord[0])-1
+        notaEncontrada = arregloC[numero]
+        diminished(notaEncontrada, pos, midi)
+    pos += 1
+
+def construirProgresion(midi):
+    global pos
+    acorde = ""
     from random import randint
     if (randint(0, 2) == 0):
-        primerAcorde = "5M"
+        acorde = "5M"
+        Major(g, pos, midi)
     else:
-        primerAcorde = "1M"
-    print(primerAcorde)
+        acorde = "1M"
+        Major(c, pos, midi)
+    pos += 1
+    progresion.append(acorde)
 
-
-
+    while(len(progresion) < 6):
+        if (acorde == "1M"):
+            acorde = random.choice(sig1)
+        elif (acorde == "2m"):
+            acorde = random.choice(sig2)
+        elif (acorde == "3m"):
+            acorde = random.choice(sig3)
+        elif (acorde == "4M"):
+            acorde = random.choice(sig4)
+        elif (acorde == "5M"):
+            acorde = random.choice(sig5)
+        elif (acorde == "6m"):
+            acorde = random.choice(sig6)
+        elif (acorde == "7d"):
+            acorde = random.choice(sig7)
+        tipoAcorde(acorde, midi)
+        progresion.append(acorde)
 
 MyMIDI = MIDIFile(1)  # One track, defaults to format 1 (tempo track is created automatically)
 MyMIDI.addTempo(track, time, tempo)
 
-minor6(c, 0, MyMIDI)
-construirProgresion()
+construirProgresion(MyMIDI)
+print('[%s]' % ', '.join(map(str, progresion)))
 
-with open("aa.mid", 'wb') as output_file:
+with open("cbs.mid", 'wb') as output_file:
     try:
         MyMIDI.writeFile(output_file)
     finally:
         output_file.close()
 
-#for i, pitch in enumerate(degrees):
-    #MyMIDI.addNote(track, channel, pitch, time + i, duration, volume)
-
-#with open("a.mid", "wb") as output_file:
-    #MyMIDI.writeFile(output_file)
-    #MyMIDI.close()
-
-
-
-# GRADOS SIGUIENTES
-# sig1 = [1,2,3,4,5,6,7] #grados siguientes del 1er grado
-# sig2 = [1,2,5,6] #grados siguientes del 2do grado
-# sig3 = [3,6,4,7] #grados siguientes del 3er grado
-# sig4 = [1,4,5,7,6,2] #grados siguientes del 4to grado
-# sig5 = [1,5,6,2,4] #grados siguientes del 5to grado
-# sig6 = [6,2,5,4,7] #grados siguientes del 6to grado
-# sig7 = [1,2,4,5,6] #grados siguientes del 7mo grado
-#
 # Variables
 # progresion = []
 #
