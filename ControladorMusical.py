@@ -34,13 +34,29 @@ g = 67
 gSus = 68
 
 # GRADOS SIGUIENTES
-sig1 = ["2m", "3m", "4M", "5M", "6m", "7d"] #grados siguientes del 1er grado
-sig2 = ["1M", "5M", "6m"] #grados siguientes del 2do grado
-sig3 = ["6m", "4M", "7d"] #grados siguientes del 3er grado
-sig4 = ["1M", "5M", "7d", "6m", "2m"] #grados siguientes del 4to grado
-sig5 = ["1M", "6m", "2m", "4M"] #grados siguientes del 5to grado
-sig6 = ["2m", "5M", "4M", "7d"] #grados siguientes del 6to grado
-sig7 = ["1M", "2m", "4M", "5M", "6m"] #grados siguientes del 7mo grado
+sig1M = ["3m", "3bM", "5M", "6m", "7d"] #grados siguientes del 1er grado Mayor
+sig4M = ["5M", "7d"] #grados siguientes del 4to grado Mayor
+sig5M = ["1M", "3bM", "6m", "6bM", "7bM"] #grados siguientes del 5to grado Mayor
+sig6m = ["2m", "2M", "5M", "4M"] #grados siguientes del 6to grado menor
+sig2m = ["1M", "5M", "6m"] #grados siguientes del 2do grado menor
+sig2M = ["1M", "4M", "5M"] #grados siguientes del 2do grado Mayor
+sig7bM = ["1M"] #grados siguientes del 7mo grado bemol Mayor
+sig3m = ["1", "6m"] #grados siguientes del 3er grado menor
+sig4m = ["1M", "5M"] #grados siguientes del 4to grado menor
+sig3bM = ["1M", "4M", "5M", "7bM"] #grados siguientes del 3er grado bemol Mayor
+sig6M = ["2m", "5M", "4M"] #grados siguientes del 6to grado Mayor
+sig6bM = ["5M", "4M", "7bM"] #grados siguientes del 6to grado bemol Mayor
+sig3M = ["6m", "4M", "7d"] #grados siguientes del 3er grado Mayor
+sig5m = ["1M"] #grados siguientes del 5to grado menor
+sig7d = ["1M", "2m", "4M", "5M", "6m", "6bM"] #grados siguientes del 7mo grado disminuido
+
+#sig1 = ["2m", "3m", "4M", "5M", "6m", "7d"] #grados siguientes del 1er grado
+#sig2 = ["1M", "5M", "6m"] #grados siguientes del 2do grado
+#sig3 = ["6m", "4M", "7d"] #grados siguientes del 3er grado
+#sig4 = ["1M", "5M", "7d", "6m", "2m"] #grados siguientes del 4to grado
+#sig5 = ["1M", "6m", "2m", "4M"] #grados siguientes del 5to grado
+#sig6 = ["2m", "5M", "4M", "7d"] #grados siguientes del 6to grado
+#sig7 = ["1M", "2m", "4M", "5M", "6m"] #grados siguientes del 7mo grado
 
 arregloC = [c, d, e, f, g, a, b]
 progresion = []
@@ -362,15 +378,26 @@ def tipoAcorde(chord, midi):
         numero = int(chord[0])-1
         notaEncontrada = arregloC[numero]
         diminished(notaEncontrada, pos, midi)
+    elif (chord[1] == "b"):
+        numero = int(chord[0])
+        if (numero == 3):
+            flatThree(c, pos, midi)
+        elif (numero == 6):
+            flatSix(c, pos, midi)
+        elif (numero == 7):
+            flatSeven(c, pos, midi)
     pos += 1
 
 def construirProgresion(midi):
     global pos
     acorde = ""
     from random import randint
-    if (randint(0, 2) == 0):
+    if (randint(0, 3) == 0):
         acorde = "5M"
         Major(g, pos, midi)
+    elif (randint(0, 3) == 1):
+        acorde = "6m"
+        minor(a, pos, midi)
     else:
         acorde = "1M"
         Major(c, pos, midi)
@@ -379,33 +406,58 @@ def construirProgresion(midi):
 
     while(len(progresion) < 6):
         if (acorde == "1M"):
-            acorde = random.choice(sig1)
+            acorde = random.choice(sig1M)
         elif (acorde == "2m"):
-            acorde = random.choice(sig2)
+            acorde = random.choice(sig2m)
+        elif (acorde == "2M"):
+            acorde = random.choice(sig2M)
         elif (acorde == "3m"):
-            acorde = random.choice(sig3)
+            acorde = random.choice(sig3m)
+        elif (acorde == "3M"):
+            acorde = random.choice(sig3M)
+        elif (acorde == "3bM"):
+            acorde = random.choice(sig3bM)
+        elif (acorde == "4m"):
+            acorde = random.choice(sig4m)
         elif (acorde == "4M"):
-            acorde = random.choice(sig4)
+            acorde = random.choice(sig4M)
+        elif (acorde == "5m"):
+            acorde = random.choice(sig5m)
         elif (acorde == "5M"):
-            acorde = random.choice(sig5)
+            acorde = random.choice(sig5M)
         elif (acorde == "6m"):
-            acorde = random.choice(sig6)
+            acorde = random.choice(sig6m)
+        elif (acorde == "6M"):
+            acorde = random.choice(sig6M)
+        elif (acorde == "6bM"):
+            acorde = random.choice(sig6bM)
         elif (acorde == "7d"):
-            acorde = random.choice(sig7)
+            acorde = random.choice(sig7d)
+        elif (acorde == "7bM"):
+            acorde = random.choice(sig7bM)
         tipoAcorde(acorde, midi)
         progresion.append(acorde)
+
+def leerProgresion(midi):
+    global pos
+    global progresion
+    for i in progresion:
+        tipoAcorde(i, midi)
+
 
 MyMIDI = MIDIFile(1)  # One track, defaults to format 1 (tempo track is created automatically)
 MyMIDI.addTempo(track, time, tempo)
 
 construirProgresion(MyMIDI)
+#progresion = ["1M", "4m", "7d", "5M", "4M", "7d"]
+#leerProgresion(MyMIDI)
 print('[%s]' % ', '.join(map(str, progresion)))
 
-with open("cbs.mid", 'wb') as output_file:
+with open("zn.mid", 'wb') as output_file:
     try:
         MyMIDI.writeFile(output_file)
     finally:
-        output_file.close()
+        output_file.close()#
 
 # Variables
 # progresion = []
