@@ -9,6 +9,7 @@ duration = 1  # In beats
 tempo = 60  # In BPM
 volume = 100  # 0-127, as per the MIDI standard
 pos = 0
+fitness = 0
 
 # NOTAS
 aBem = 56  # Bem = bemol
@@ -41,7 +42,7 @@ sig6m = ["2m", "2M", "5M", "4M"] #grados siguientes del 6to grado menor
 sig2m = ["1M", "5M", "6m"] #grados siguientes del 2do grado menor
 sig2M = ["1M", "4M", "5M"] #grados siguientes del 2do grado Mayor
 sig7bM = ["1M"] #grados siguientes del 7mo grado bemol Mayor
-sig3m = ["1", "6m"] #grados siguientes del 3er grado menor
+sig3m = ["1M", "6m"] #grados siguientes del 3er grado menor
 sig4m = ["1M", "5M"] #grados siguientes del 4to grado menor
 sig3bM = ["1M", "4M", "5M", "7bM"] #grados siguientes del 3er grado bemol Mayor
 sig6M = ["2m", "5M", "4M"] #grados siguientes del 6to grado Mayor
@@ -50,16 +51,12 @@ sig3M = ["6m", "4M", "7d"] #grados siguientes del 3er grado Mayor
 sig5m = ["1M"] #grados siguientes del 5to grado menor
 sig7d = ["1M", "2m", "4M", "5M", "6m", "6bM"] #grados siguientes del 7mo grado disminuido
 
-#sig1 = ["2m", "3m", "4M", "5M", "6m", "7d"] #grados siguientes del 1er grado
-#sig2 = ["1M", "5M", "6m"] #grados siguientes del 2do grado
-#sig3 = ["6m", "4M", "7d"] #grados siguientes del 3er grado
-#sig4 = ["1M", "5M", "7d", "6m", "2m"] #grados siguientes del 4to grado
-#sig5 = ["1M", "6m", "2m", "4M"] #grados siguientes del 5to grado
-#sig6 = ["2m", "5M", "4M", "7d"] #grados siguientes del 6to grado
-#sig7 = ["1M", "2m", "4M", "5M", "6m"] #grados siguientes del 7mo grado
-
-arregloC = [c, d, e, f, g, a, b]
-progresion = []
+arregloC = [c, d, e, f, g, a, b] # notas basicas de la tonalidad Do Mayor#
+progresion = [] # cada individuo de la poblacion inicial
+progresiones = [] # lista de progresiones que representan la poblacion inicial
+fitnessProgresiones = [] # lista con el fitness de cada progresion de la poblacion inicial
+progresionesMasAptas = [] # lista de progresiones con mayor aptitud
+progresionesPadres = [] # lista de progresiones que se reproducirán
 
 
 # método que construye un grado si es Mayor
@@ -360,16 +357,22 @@ def minor6(note, where, midi):
     midi.addNote(track, channel, pitch, time, duration, volume)
     return
 
-def tipoAcorde(chord, midi):
+def tipoAcorde(chord, midi, tieneSetima):
     global pos
     if (chord[1] == "M"):
         numero = int(chord[0])-1
         notaEncontrada = arregloC[numero]
-        Major(notaEncontrada, pos, midi)
+        if (tieneSetima == 1):
+            Major7(notaEncontrada, pos, midi)
+        else:
+            Major(notaEncontrada, pos, midi)
     elif (chord[1] == "m"):
         numero = int(chord[0])-1
         notaEncontrada = arregloC[numero]
-        minor(notaEncontrada, pos, midi)
+        if (tieneSetima == 0):
+            minor7(notaEncontrada, pos, midi)
+        else:
+            minor(notaEncontrada, pos, midi)
     elif (chord[1] == "A"):
         numero = int(chord[0])-1
         notaEncontrada = arregloC[numero]
@@ -388,7 +391,8 @@ def tipoAcorde(chord, midi):
             flatSeven(c, pos, midi)
     pos += 1
 
-def construirProgresion(midi):
+def construirProgresion(midi, progresion):
+    global progresiones
     global pos
     acorde = ""
     from random import randint
@@ -404,30 +408,30 @@ def construirProgresion(midi):
     pos += 1
     progresion.append(acorde)
 
-    while(len(progresion) < 6):
-        if (acorde == "1M"):
+    while(len(progresion) < 5):
+        if (acorde == "1M" or acorde == "1M7"):
             acorde = random.choice(sig1M)
-        elif (acorde == "2m"):
+        elif (acorde == "2m" or acorde == "2m7"):
             acorde = random.choice(sig2m)
-        elif (acorde == "2M"):
+        elif (acorde == "2M" or acorde == "2M7"):
             acorde = random.choice(sig2M)
-        elif (acorde == "3m"):
+        elif (acorde == "3m" or acorde == "3m7"):
             acorde = random.choice(sig3m)
-        elif (acorde == "3M"):
+        elif (acorde == "3M" or acorde == "3M7"):
             acorde = random.choice(sig3M)
         elif (acorde == "3bM"):
             acorde = random.choice(sig3bM)
-        elif (acorde == "4m"):
+        elif (acorde == "4m" or acorde == "4m7"):
             acorde = random.choice(sig4m)
-        elif (acorde == "4M"):
+        elif (acorde == "4M" or acorde == "4M7"):
             acorde = random.choice(sig4M)
-        elif (acorde == "5m"):
+        elif (acorde == "5m" or acorde == "5m7"):
             acorde = random.choice(sig5m)
-        elif (acorde == "5M"):
+        elif (acorde == "5M" or acorde == "5M7"):
             acorde = random.choice(sig5M)
-        elif (acorde == "6m"):
+        elif (acorde == "6m" or acorde == "6m7"):
             acorde = random.choice(sig6m)
-        elif (acorde == "6M"):
+        elif (acorde == "6M" or acorde == "6M7"):
             acorde = random.choice(sig6M)
         elif (acorde == "6bM"):
             acorde = random.choice(sig6bM)
@@ -435,8 +439,19 @@ def construirProgresion(midi):
             acorde = random.choice(sig7d)
         elif (acorde == "7bM"):
             acorde = random.choice(sig7bM)
-        tipoAcorde(acorde, midi)
+
+        tamAcorde = len(acorde)-1
+        if acorde != "3bM" and acorde != "6bM" and acorde != "7bM" and (acorde[tamAcorde] == 'M') or (acorde[tamAcorde] == 'm'):
+            if (random.randint(0, 2) == 0):
+                acorde += '7'
+                tipoAcorde(acorde, midi, 1) # tiene 7ma
+            else:
+                tipoAcorde(acorde, midi, 0) # no tiene 7ma
+        else:
+            tipoAcorde(acorde, midi, 0)  # no tiene 7ma
         progresion.append(acorde)
+    progresiones.append(progresion)
+    #print('[%s]' % ', '.join(map(str, progresion)))
 
 def leerProgresion(midi):
     global pos
@@ -444,22 +459,102 @@ def leerProgresion(midi):
     for i in progresion:
         tipoAcorde(i, midi)
 
+def generarProgresiones(cantidad):
+    global pos
+    global progresion
+    global time
+    i = 0
+    while (i < cantidad):
+        pos = 0
+        time = 0
+        progresion = []
+        MyMIDI = MIDIFile(1)  # One track, defaults to format 1 (tempo track is created automatically)
+        MyMIDI.addTempo(track, time, tempo)
+        construirProgresion(MyMIDI, progresion)
+        i += 1
 
-MyMIDI = MIDIFile(1)  # One track, defaults to format 1 (tempo track is created automatically)
-MyMIDI.addTempo(track, time, tempo)
+        with open("zn.mid", 'wb') as output_file:
+            try:
+                MyMIDI.writeFile(output_file)
+            finally:
+                output_file.close()
 
-construirProgresion(MyMIDI)
-#progresion = ["1M", "4m", "7d", "5M", "4M", "7d"]
-#leerProgresion(MyMIDI)
-print('[%s]' % ', '.join(map(str, progresion)))
+def evaluarFitness(progresionesEval):
+    global fitness
+    for progr in progresionesEval:
+        fitness = 0
+        contadorPrimerosGrados = 0
+        contadorGradosEspeciales = 0
 
-with open("zn.mid", 'wb') as output_file:
-    try:
-        MyMIDI.writeFile(output_file)
-    finally:
-        output_file.close()#
+        #cadencia
+        ultimoAcorde = len(progr) - 1
+        penultimoAcorde = ultimoAcorde - 1
+        antepenultimoAcorde = penultimoAcorde - 1
 
-# Variables
-# progresion = []
+        #cadencia terminada en I
+        if (progr[ultimoAcorde] == "1M") and (progr[penultimoAcorde] == "7bM") and ((progr[antepenultimoAcorde] == "5M") or (progr[antepenultimoAcorde] == "5M7")): # V-bVII-I
+            fitness += 7
+        elif (progr[ultimoAcorde] == "1M") and ((progr[penultimoAcorde] == "5M") or (progr[penultimoAcorde] == "5M7")) and (progr[antepenultimoAcorde] == "7bM"): # bVII-V-I
+            fitness += 7
+        elif (progr[ultimoAcorde] == "1M") and ((progr[penultimoAcorde] == "5M") or (progr[penultimoAcorde] == "5M7")) and (progr[antepenultimoAcorde] == "2M"): # II-V-I
+            fitness += 5
+        elif (progr[ultimoAcorde] == "1M") and (progr[penultimoAcorde] == "2M"): # II-I
+            fitness += 4
+        elif (progr[ultimoAcorde] == "1M") and (progr[penultimoAcorde] == "6bM") and ((progr[antepenultimoAcorde] == "5M") or (progr[antepenultimoAcorde] == "5M7")): # V-bVI-I
+            fitness += 7
+        # cadencia terminada en V
+        elif (progr[ultimoAcorde] == "5M") or (progr[ultimoAcorde] == "5M7"):
+            fitness += 15
+        # cadencia terminada en VI
+        elif progr[ultimoAcorde] == "6M":
+            fitness += 20
+        # cadencia terminada en vi
+        elif progr[ultimoAcorde] == "6m":
+            fitness += 30
+        # cualquier otro caso
+        else:
+            fitness += 5
+
+        # buscar que no empiece con 1er grado
+        if (progr[0] != "1M") or (progr[0] != "1M7"):
+            fitness += 10
+
+        # buscador de primeros grados y grados especiales
+        for chord in progr:
+            if (chord == "1M") or (chord == "1M7"):
+                contadorPrimerosGrados += 1
+            if (chord == "6bM") or (chord == "4m") or (chord == "4m7") or (chord == "6M") or (chord == "6M7") or (chord == "7bM") or (chord == "5m") or (chord == "5m7") or (chord == "3bM"):
+                contadorGradosEspeciales += 1
+
+        # buscar que la progresion no tenga mas de un 1er grado
+        if contadorPrimerosGrados <= 1:
+            fitness += 10
+
+        #depende de cuantos grados especiales tiene asi aumenta su fitness
+        if contadorGradosEspeciales == 1:
+            fitness += 25
+        elif contadorGradosEspeciales == 2:
+            fitness += 40
+
+        fitnessProgresiones.append(fitness)
+        if fitness >= 65:
+            progresionesMasAptas.append(progr)
+
+#def cruzamiento():
+#    global progresionesMasAptas
+#    global progresionesPadres
+#    global progresiones
+#    menosAptos = len(progresionesMasAptas) * 0.2
+#    cantidadPadres = len(progresionesMasAptas) + menosAptos
+#    i = 0
 #
-# mf = MIDIFile(1)  # only 1 track
+#    while i < menosAptos:
+#        aleatorio = random.randint(0, len(progresiones)-1)
+#        i =+ 1
+
+generarProgresiones(100)
+evaluarFitness(progresiones)
+print('[%s]' % '\n'.join(map(str, progresionesMasAptas)))
+print(len(progresionesMasAptas))
+#for i in fitnessProgresiones:
+    #print(i)
