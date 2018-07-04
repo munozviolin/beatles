@@ -596,7 +596,7 @@ def cruzamiento(leido, escrito):
         i += 1
 
     j += 1
-    if (j <= 3):
+    if (j <= 30):
         escrito2 = []
         cruzamiento(escrito, escrito2)
         #escrito = escrito2.copy()
@@ -610,7 +610,23 @@ print("primera generacion: ", max(fitnessProgresiones))
 cruzamiento(progresionesMasAptas, progresionesHijas)
 #print('[%s]' % '\n'.join(map(str, progresionesHijas)))
 
+print("__________________________________________________________________________")
+
 fitnessProgresiones = []
 
 evaluarFitness(progresionesHijas)
-print("segunda generacion: ", max(fitnessProgresiones))
+masApto = max(fitnessProgresiones)
+indexMasApto = fitnessProgresiones.index(masApto)
+progresionGanadora = progresionesHijas[indexMasApto]
+print("segunda generacion: ", masApto)
+print("Progresion Ganadora 1: ", '[%s]' % ', '.join(map(str, progresionGanadora)))
+
+progresionGanadora2 = progresionGanadora.copy()
+while(progresionGanadora2 == progresionGanadora):
+    fitnessProgresiones.remove(masApto)
+    progresionesHijas.remove(progresionGanadora)
+    masApto2 = max(fitnessProgresiones)
+    indexMasApto2 = fitnessProgresiones.index(masApto2)
+    progresionGanadora2 = progresionesHijas[indexMasApto2]
+print("Progresion Ganadora 2: ", '[%s]' % ', '.join(map(str, progresionGanadora2)))
+
