@@ -10,6 +10,7 @@ tempo = 60  # In BPM
 volume = 100  # 0-127, as per the MIDI standard
 pos = 0
 fitness = 0
+j = 0
 
 # NOTAS
 aBem = 56  # Bem = bemol
@@ -50,13 +51,17 @@ sig6bM = ["5M", "4M", "7bM"] #grados siguientes del 6to grado bemol Mayor
 sig3M = ["6m", "4M", "7d"] #grados siguientes del 3er grado Mayor
 sig5m = ["1M"] #grados siguientes del 5to grado menor
 sig7d = ["1M", "2m", "4M", "5M", "6m", "6bM"] #grados siguientes del 7mo grado disminuido
+gradosPosibles = ["1M", "4M", "5M", "6m", "2m", "2M", "7bM", "3m", "4m", "3bM", "6M", "6bM", "3M", "5m", "7d"] # grados posibles en la progresion
 
-arregloC = [c, d, e, f, g, a, b] # notas basicas de la tonalidad Do Mayor#
+arregloC = [c, d, e, f, g, a, b] # notas basicas de la tonalidad Do Mayor
 progresion = [] # cada individuo de la poblacion inicial
 progresiones = [] # lista de progresiones que representan la poblacion inicial
 fitnessProgresiones = [] # lista con el fitness de cada progresion de la poblacion inicial
+fitnessProgresionesHijas = [] # lista con el fitness de cada progresion de la poblacion final
 progresionesMasAptas = [] # lista de progresiones con mayor aptitud
 progresionesPadres = [] # lista de progresiones que se reproducirán
+progresionesHijas = []
+progresionesHijas2= []
 
 
 # método que construye un grado si es Mayor
@@ -540,21 +545,72 @@ def evaluarFitness(progresionesEval):
         if fitness >= 65:
             progresionesMasAptas.append(progr)
 
-#def cruzamiento():
-#    global progresionesMasAptas
-#    global progresionesPadres
-#    global progresiones
-#    menosAptos = len(progresionesMasAptas) * 0.2
-#    cantidadPadres = len(progresionesMasAptas) + menosAptos
-#    i = 0
-#
-#    while i < menosAptos:
-#        aleatorio = random.randint(0, len(progresiones)-1)
-#        i =+ 1
+def cruzamiento(leido, escrito):
+    #global progresionesMasAptas
+    global progresionesPadres
+    global progresiones
+    global j
+    progresionesPadres = []
+    menosAptos = len(leido) * 0.3
+    progresionesPadres = leido.copy()
+    i = 0
+
+    while i < menosAptos:
+        aleatorio = random.randint(0, len(progresiones)-1)
+        progresionesPadres.append(progresiones[aleatorio]) # selecciona al azar algunas progresiones de la poblacion inicial no necesariamente tan leido, pero que contribuyen a la diversidad de la poblacion
+        i += 1
+
+    i = 0
+    tam = len(progresionesPadres[0])
+    #print(len(progresionesPadres))
+    while i < len(progresionesPadres):
+        progTemporal = []
+        aleatorio = random.randint(0, len(progresionesPadres) - 1)
+        progresionAleatoria = progresionesPadres[aleatorio]
+        progresionI = progresionesPadres[i]
+        if progresionI[1] == progresionAleatoria[1]:
+            progTemporal.append(progresionAleatoria[0])
+            progTemporal.append(progresionI[1])
+            progTemporal.append(progresionI[2])
+            progTemporal.append(progresionI[3])
+            progTemporal.append(progresionI[4])
+        elif progresionI[2] == progresionAleatoria[2]:
+            progTemporal.append(progresionAleatoria[0])
+            progTemporal.append(progresionAleatoria[1])
+            progTemporal.append(progresionI[2])
+            progTemporal.append(progresionI[3])
+            progTemporal.append(progresionI[4])
+        elif progresionI[3] == progresionAleatoria[3]:
+            progTemporal.append(progresionI[0])
+            progTemporal.append(progresionI[1])
+            progTemporal.append(progresionI[2])
+            progTemporal.append(progresionAleatoria[3])
+            progTemporal.append(progresionAleatoria[4])
+        else:
+            progTemporal = progresionI.copy()#
+
+        #mutacion con probabilidad de 0.1
+        if random.randint(1, 100) == 1:
+            progTemporal[tam-1] = random.choice(gradosPosibles)
+        escrito.append(progTemporal)
+        i += 1
+
+    j += 1
+    if (j <= 3):
+        escrito2 = []
+        cruzamiento(escrito, escrito2)
+        #escrito = escrito2.copy()
+        #j += 1
+
 
 generarProgresiones(100)
 evaluarFitness(progresiones)
-print('[%s]' % '\n'.join(map(str, progresionesMasAptas)))
-print(len(progresionesMasAptas))
-#for i in fitnessProgresiones:
-    #print(i)
+print("primera generacion: ", max(fitnessProgresiones))
+
+cruzamiento(progresionesMasAptas, progresionesHijas)
+#print('[%s]' % '\n'.join(map(str, progresionesHijas)))
+
+fitnessProgresiones = []
+
+evaluarFitness(progresionesHijas)
+print("segunda generacion: ", max(fitnessProgresiones))
