@@ -3,6 +3,7 @@ import random
 from midiutil import MIDIFile
 
 MidiFinal = MIDIFile(1)  # One track, defaults to format 1 (tempo track is created automatically)
+MidiFinal2 = MIDIFile(1)  # One track, defaults to format 1 (tempo track is created automatically)
 degrees = [60, 62, 64, 65, 67, 69, 71, 72]  # MIDI note number
 track = 0
 channel = 0
@@ -53,8 +54,7 @@ sig6bM = ["5M", "4M", "7bM"]  # grados siguientes del 6to grado bemol Mayor
 sig3M = ["6m", "4M", "7d"]  # grados siguientes del 3er grado Mayor
 sig5m = ["1M"]  # grados siguientes del 5to grado menor
 sig7d = ["1M", "2m", "4M", "5M", "6m", "6bM"]  # grados siguientes del 7mo grado disminuido
-gradosPosibles = ["1M", "4M", "5M", "6m", "2m", "2M", "7bM", "3m", "4m", "3bM", "6M", "6bM", "3M", "5m",
-                  "7d"]  # grados posibles en la progresion
+gradosPosibles = ["1M", "4M", "5M", "6m", "2m", "2M", "7bM", "3m", "4m", "3bM", "6M", "6bM", "3M", "5m", "7d"]  # grados posibles en la progresion
 
 arregloC = [c, d, e, f, g, a, b]  # notas basicas de la tonalidad Do Mayor
 progresion = []  # cada individuo de la poblacion inicial
@@ -621,7 +621,7 @@ def cruzamiento(leido, escrito):
         else:
             progTemporal = progresionI.copy()  #
 
-        # mutacion con probabilidad de 0.1
+        # mutacion con probabilidad de 0.01
         if random.randint(1, 100) == 1:
             progTemporal[tam - 1] = random.choice(gradosPosibles)
         escrito.append(progTemporal)
@@ -642,20 +642,23 @@ generarProgresiones(100)
 
 # print('[%s]' % '\n'.join(map(str, progresiones)))
 evaluarFitness(progresiones)
-print("primera generacion: ", max(fitnessProgresiones))
+print("Fitness máximo de la primera generacion: ", max(fitnessProgresiones))
+print("Fitness mínimo de la primera generacion: ", min(fitnessProgresiones))
 
 cruzamiento(progresionesMasAptas, progresionesHijas)
 # print('[%s]' % '\n'.join(map(str, progresionesHijas)))
 
-print("__________________________________________________________________________")
+print("---------------------------------------------------------------------------------------------")
 
 fitnessProgresiones = []
 
 evaluarFitness(progresionesHijas)
 masApto = max(fitnessProgresiones)
+menosApto = min(fitnessProgresiones)
 indexMasApto = fitnessProgresiones.index(masApto)
 progresionGanadora = progresionesHijas[indexMasApto]
-print("segunda generacion: ", masApto)
+print("Fitness máximo de la 30va generacion: ", masApto)
+print("Fitness mínimo de la 30va generacion: ", menosApto)
 print("Progresion Ganadora 1: ", '[%s]' % ', '.join(map(str, progresionGanadora)))
 
 progresionGanadora2 = progresionGanadora.copy()
@@ -667,6 +670,7 @@ while (progresionGanadora2 == progresionGanadora):
     progresionGanadora2 = progresionesHijas[indexMasApto2]
 print("Progresion Ganadora 2: ", '[%s]' % ', '.join(map(str, progresionGanadora2)))
 
+# EXPORTAR PROGRESION 1
 track = 0
 time = 0
 MidiFinal = MIDIFile(1)  # One track, defaults to format 1 (tempo track is created automatically)
@@ -677,5 +681,20 @@ leerProgresion(progresionGanadora, MidiFinal)
 with open("progresionA.mid", 'wb') as outputf:
     try:
         MidiFinal.writeFile(outputf)
+    finally:
+        outputf.close()
+
+
+# EXPORTAR PROGRESION 2
+track = 0
+time = 0
+MidiFinal2 = MIDIFile(1)  # One track, defaults to format 1 (tempo track is created automatically)
+MidiFinal2.addTempo(track, time, tempo)
+
+leerProgresion(progresionGanadora2, MidiFinal2)
+
+with open("progresionB.mid", 'wb') as outputf:
+    try:
+        MidiFinal2.writeFile(outputf)
     finally:
         outputf.close()
